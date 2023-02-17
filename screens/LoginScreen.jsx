@@ -4,12 +4,14 @@ import {
   SafeAreaView,
   TouchableOpacity,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ImageBackground } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Input, Button } from "@rneui/themed";
+import useGoogleLogin from "../hooks/useGoogleLogin";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -22,7 +24,7 @@ export default function LoginScreen() {
           source={require("../assets/images/loginbackground.png")}
           className="w-full flex-[0.3]"
         ></ImageBackground>
-        <View className="bg-white flex-1 m-4 p-4 border border-gray-400 relative bottom-20">
+        <View className="bg-white flex-[0.7] m-4 p-4 border border-gray-400 -mt-32">
           <Tabs setShowLogin={setShowLogin} showLogin={showLogin} />
           {showLogin ? <LoginForm /> : <SignUpForm />}
         </View>
@@ -34,8 +36,17 @@ export default function LoginScreen() {
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { loading, login } = useGoogleLogin();
+
+  if (loading) {
+    return (
+      <View className="py-4 flex-1 justify-center items-center">
+        <ActivityIndicator size={50} />
+      </View>
+    );
+  }
   return (
-    <View className="py-4">
+    <View className="py-4 flex-1">
       <Input
         placeholder="email"
         autoFocus
@@ -64,6 +75,14 @@ function LoginForm() {
         secureTextEntry
       />
       <Button title="Login" />
+      <Text className="text-center p-1 text-gray-500">or</Text>
+      <TouchableOpacity
+        className="bg-blue-300 p-2"
+        onPress={login}
+        disabled={loading}
+      >
+        <Text className="text-center">Sign in with Google</Text>
+      </TouchableOpacity>
     </View>
   );
 }

@@ -2,6 +2,8 @@ import { View, Text } from "react-native";
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./LoginScreen";
+import { useAuthStatus } from "../hooks/useAuthStatus";
+import HomeScreen from "./HomeScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -14,10 +16,11 @@ const globalScreenStyles = {
 };
 
 export default function AuthStack() {
+  const { loading, loggedIn, theUser } = useAuthStatus();
   const AuthenticatedScreens = () => {
     return (
       <Stack.Navigator>
-        <Stack.Screen name="Home" />
+        <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     );
   };
@@ -29,5 +32,10 @@ export default function AuthStack() {
       </Stack.Navigator>
     );
   };
-  return <UnauthenticatedScreens />;
+
+  if (loading) {
+    return null;
+  }
+
+  return loggedIn ? <AuthenticatedScreens /> : <UnauthenticatedScreens />;
 }
