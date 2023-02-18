@@ -1,9 +1,12 @@
 import React from "react";
 import * as Google from "expo-auth-session/providers/google";
-import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  getAuth,
+} from "firebase/auth";
 import { useState } from "react";
 import { CLIENT_ID, ANDROID_CLIENT_ID } from "@env";
-import { auth } from "../firebase.config";
 
 export default function useGoogleLogin() {
   const [loading, setLoading] = useState(false);
@@ -14,6 +17,8 @@ export default function useGoogleLogin() {
 
   React.useEffect(() => {
     if (response?.type === "success") {
+      const auth = getAuth();
+
       async function t() {
         setLoading(true);
         try {
