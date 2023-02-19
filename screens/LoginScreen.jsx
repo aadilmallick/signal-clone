@@ -19,6 +19,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useUpload } from "../hooks/useFileUpload";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import ToastManager from "toastify-react-native";
+import { useSignIn } from "../hooks/useSignIn";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -32,7 +33,7 @@ export default function LoginScreen() {
           source={require("../assets/images/loginbackground.png")}
           className="w-full flex-[0.3]"
         ></ImageBackground>
-        <View className="bg-white flex-[0.7] m-4 p-4 border border-gray-400 -mt-32">
+        <View className="bg-white flex-[0.7] m-4 p-4 border border-gray-400 -mt-40">
           <Tabs setShowLogin={setShowLogin} showLogin={showLogin} />
           {showLogin ? <LoginForm /> : <SignUpForm />}
         </View>
@@ -41,10 +42,33 @@ export default function LoginScreen() {
   );
 }
 
+// TODO: login user with firebase
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { isLoading, login } = useSignIn(email, password);
 
+  const onSubmit = async () => {
+    if (!email || !password) {
+      Toast.error("You need to enter email and password");
+      return;
+    }
+
+    try {
+      const user = await login();
+      Toast.success("successfully logged in");
+    } catch (e) {
+      Toast.error("Something went wrong! credentials are probably incorrect");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View className="p-2 items-center justify-center">
+        <ActivityIndicator size={40} />
+      </View>
+    );
+  }
   return (
     <View className="py-4 flex-1">
       <Input
@@ -74,39 +98,50 @@ function LoginForm() {
         }}
         secureTextEntry
       />
-      <Button title="Login" />
+      <Button title="Login" onPress={onSubmit} />
       <GoogleButton />
     </View>
   );
 }
 
+// TODO: 1. register user with firebase
+// TODO: 2. get url from uploaded picture and update profile with it
 function SignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [photoURL, setPhotoURL] = useState(
-    "https://www.amongusavatarcreator.com/assets/img/main/icon.png"
-  );
-  const { signup, isLoading } = useSignUp(email, password);
-
+  const [photo, setPhoto] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { signup, updateUserProfile } = useSignUp(email, password);
+  const { uploadImageBlob } = useUpload("profiles");
   async function onSubmit() {
     if (
       !email ||
       !password ||
       password.length < 7 ||
       password !== confirmPassword ||
-      !photoURL
+      !photo
     ) {
       console.log("invalid credentials");
       Toast.error("Invalid credentials");
       return;
     }
-
-    console.log(email, password, photoURL);
+    setLoading(true);
+    console.log(email, password, photo);
+    const user = await signup();
+    console.log(user);
+    const photoURL = await uploadImageBlob(photo);
+    await updateUserProfile(user.email, photoURL);
+    setLoading(false);
+    Toast.success("successfully signed up");
   }
+
+  if (loading) {
+    return <ActivityIndicator />;
+  }
+
   return (
     <KeyboardAvoidingView className="py-4" behavior="height">
-      <ToastManager />
       <Input
         placeholder="email"
         autoFocus
@@ -147,7 +182,7 @@ function SignUpForm() {
         }}
         secureTextEntry
       />
-      <ProfilePicButton setUrl={setPhotoURL} />
+      <ProfilePicButton setPhoto={setPhoto} />
       <Button title="Sign up" onPress={onSubmit} />
       <GoogleButton />
     </KeyboardAvoidingView>
@@ -190,9 +225,9 @@ function Tabs({ setShowLogin, showLogin }) {
   );
 }
 
-function ProfilePicButton({ setUrl }) {
+function ProfilePicButton({ setPhoto }) {
   const [image, setImage] = useState(null);
-  const { uploadImageBlob, isLoading } = useUpload("profiles");
+
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -207,18 +242,9 @@ function ProfilePicButton({ setUrl }) {
       const uri = result.assets[0].uri;
       console.log("uri got:", uri);
       setImage(uri);
-      const imageURL = await uploadImageBlob(uri);
-      setUrl(imageURL);
+      setPhoto(uri);
     }
   };
-
-  if (isLoading) {
-    return (
-      <View className="p-2 items-center justify-center">
-        <ActivityIndicator size={40} />
-      </View>
-    );
-  }
 
   return (
     <View className="mb-8">
