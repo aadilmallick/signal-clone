@@ -56,6 +56,7 @@ function LoginForm() {
 
     try {
       const user = await login();
+      console.log(user);
       Toast.success("successfully logged in");
     } catch (e) {
       Toast.error("Something went wrong! credentials are probably incorrect");
@@ -104,8 +105,6 @@ function LoginForm() {
   );
 }
 
-// TODO: 1. register user with firebase
-// TODO: 2. get url from uploaded picture and update profile with it
 function SignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

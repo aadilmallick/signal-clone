@@ -4,12 +4,14 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./LoginScreen";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import HomeScreen from "./HomeScreen";
+import AddChatScreen from "./AddChatScreen";
+import ChatScreen from "./ChatScreen";
 
 const Stack = createNativeStackNavigator();
 
 const globalScreenStyles = {
   headerStyle: {
-    backgroundColor: "blue",
+    backgroundColor: "lightblue",
   },
   headerTitleStyle: { color: "white" },
   headerTintColor: "white",
@@ -19,8 +21,16 @@ export default function AuthStack() {
   const { loading, loggedIn, theUser } = useAuthStatus();
   const AuthenticatedScreens = () => {
     return (
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={globalScreenStyles}>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="AddChat"
+          component={AddChatScreen}
+          options={{
+            headerTitle: "Add a new chat",
+          }}
+        />
+        <Stack.Screen name="Chat" component={ChatScreen} />
       </Stack.Navigator>
     );
   };
